@@ -54,14 +54,6 @@ function calculatrice(number1, number2, operator) {
   return total;
 }
 
-function renderCalculList(listCalcul) {
-  let htmlCalcul = '<ul id="student-list">';
-  listCalcul.forEach((calcul, index) => {
-    htmlCalcul += `<li id="student-${index}">${student.name} - ${student.date} <button onclick="handleDeleteStudent(${index})">Delete</button></li>`;
-  });
-  htmlCalcul += "</ul>";
-}
-
 // Generate the HTML to display student data
 function htmlCode(listStudents) {
   let html = "<h1>Student List</h1>";
@@ -95,6 +87,25 @@ function htmlCode(listStudents) {
   return html;
 }
 
+// Function to generate HTML code for the calculator memory
+function generateMemoryHTML(memory) {
+  let memoryHTMLCode = "";
+
+  // Generate HTML for each memory item
+  memory.forEach((item, index) => {
+    memoryHTMLCode += `
+      <li>
+        <span>Number 1: ${item.number1}</span>
+        <span>Number 2: ${item.number2}</span>
+        <span>Operator: ${item.operator}</span>
+        <span>Total: ${item.total}</span>
+      </li>
+    `;
+  });
+
+  return memoryHTMLCode;
+}
+
 // Export functions
 module.exports = {
   readStudentData,
@@ -102,4 +113,5 @@ module.exports = {
   updateStudentsAfterDelete,
   calculatrice,
   htmlCode,
+  generateMemoryHTML,
 };

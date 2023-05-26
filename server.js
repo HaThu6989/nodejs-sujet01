@@ -13,10 +13,14 @@ const {
   updateStudentsAfterDelete,
   calculatrice,
   htmlCode,
+  generateMemoryHTML,
 } = utils;
 
 // Environment variables
 const { APP_LOCALHOST, APP_PORT } = process.env;
+
+// Calculator memory variable
+let calculatorMemory = [];
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
@@ -155,12 +159,12 @@ const server = http.createServer((req, res) => {
       const operator = data.operator;
       const total = calculatrice(number1, number2, operator);
 
-      dataTotalInMemory = `${number1} ${
-        data.operator === "add" ? "+" : "*"
-      }  ${number2} = ${total}`;
-
-      listCalcul.push(dataTotalInMemory);
-      console.log("listCalcul", listCalcul);
+      listCalcul.push({
+        number1,
+        number2,
+        operator,
+        total,
+      });
 
       const calculatriceHTML = fs.readFileSync(
         "./view/calculatrice.html",
@@ -180,6 +184,34 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Serve the calculator.html page
+  if (url === "calculatrice" && req.method === "GET") {
+    const calculator = fs.readFileSync(`./view/calculatrice.html`);
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(calculator);
+    return;
+  }
+
+  // Serve the memory.html page
+  if (url === "memory" && req.method === "GET") {
+    // Read the memory.html file
+    const memoryHTML = fs.readFileSync("./view/memory.html", "utf8");
+
+    // Generate the HTML code for the calculator memory
+    const memoryHTMLCode = generateMemoryHTML(listCalcul);
+
+    // Replace the <!-- MEMORY_LIST --> placeholder with the generated memory HTML
+    const updatedHTML = memoryHTML.replace(
+      "<!-- MEMORY_LIST -->",
+      memoryHTMLCode
+    );
+
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(updatedHTML);
+    return;
+  }
+
+  // Reset
   if (url === "reset" && req.method === "GET") {
     let total = calculatrice(0, 0, "add");
     const calculatriceHTML = fs.readFileSync(
@@ -192,14 +224,6 @@ const server = http.createServer((req, res) => {
     );
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(updatedCalculatriceHTML);
-    return;
-  }
-
-  if (url === "memory" && req.method === "GET") {
-    const memory = fs.readFileSync(`./view/memory.html`, "utf8");
-    const updatedCalculList = memory.replace("<!-- TOTAL_LIST -->", listCalcul);
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(updatedCalculList);
     return;
   }
 
