@@ -4,9 +4,16 @@ const fs = require("fs");
 require("dotenv").config();
 const querystring = require("querystring");
 
+let listCalcul = [];
 // Custom functions
 const utils = require("./core/utils");
-const { readStudentData, writeStudentData, htmlCode } = utils;
+const {
+  readStudentData,
+  writeStudentData,
+  updateStudentsAfterDelete,
+  calculatrice,
+  htmlCode,
+} = utils;
 
 // Environment variables
 const { APP_LOCALHOST, APP_PORT } = process.env;
@@ -94,27 +101,30 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Display user list
-  if (url === "users" && req.method === "DELETE") {
-    const usersFilePath = "./view/users.html";
-    let usersHtml = fs.readFileSync(usersFilePath, "utf8");
-    const students = readStudentData();
-    usersHtml = usersHtml.replace("<!-- STUDENT_LIST -->", htmlCode(students));
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(usersHtml);
+  // Delete a student
+  if (url === "delete" && req.method === "POST") {
+    let body = "";
 
-    return;
-  }
+    // Collect the request data
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+      // console.log("body", body); // index=0
+    });
 
-  // Delete one user in list
-  if (url === `users/:index/delete` && req.method === "POST") {
-    console.log("req.params.index", req.params.index);
-    const usersFilePath = "./view/users.html";
-    let usersHtml = fs.readFileSync(usersFilePath, "utf8");
-    const students = deleteStudent(usersHtml, req.params.index);
-    usersHtml = usersHtml.replace("<!-- STUDENT_LIST -->", htmlCode(students));
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(usersHtml);
+    // Process the request data
+    req.on("end", () => {
+      const data = querystring.parse(body);
+      const index = parseInt(data.index);
+
+      // Update list students after delete
+      updateStudentsAfterDelete(index);
+
+      // Send a success response
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true }));
+
+      return;
+    });
 
     return;
   }
@@ -124,6 +134,72 @@ const server = http.createServer((req, res) => {
     const calculatrice = fs.readFileSync(`./view/calculatrice.html`);
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(calculatrice);
+    return;
+  }
+
+  // Calculatrice
+  if (url === "calculatrice" && req.method === "POST") {
+    let body = "";
+
+    // Collect the request data
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+      // console.log("body", body);
+    });
+
+    // Process the request data
+    req.on("end", () => {
+      const data = querystring.parse(body);
+      const number1 = parseFloat(data.number1);
+      const number2 = parseFloat(data.number2);
+      const operator = data.operator;
+      const total = calculatrice(number1, number2, operator);
+
+      dataTotalInMemory = `${number1} ${
+        data.operator === "add" ? "+" : "*"
+      }  ${number2} = ${total}`;
+
+      listCalcul.push(dataTotalInMemory);
+      console.log("listCalcul", listCalcul);
+
+      const calculatriceHTML = fs.readFileSync(
+        "./view/calculatrice.html",
+        "utf8"
+      );
+      const updatedCalculatriceHTML = calculatriceHTML.replace(
+        "<!-- TOTAL -->",
+        total
+      );
+
+      // Send a success response
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(updatedCalculatriceHTML);
+      return;
+    });
+
+    return;
+  }
+
+  if (url === "reset" && req.method === "GET") {
+    let total = calculatrice(0, 0, "add");
+    const calculatriceHTML = fs.readFileSync(
+      "./view/calculatrice.html",
+      "utf8"
+    );
+    const updatedCalculatriceHTML = calculatriceHTML.replace(
+      "<!-- TOTAL -->",
+      total
+    );
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(updatedCalculatriceHTML);
+    return;
+  }
+
+  if (url === "memory" && req.method === "GET") {
+    const memory = fs.readFileSync(`./view/memory.html`, "utf8");
+    const updatedCalculList = memory.replace("<!-- TOTAL_LIST -->", listCalcul);
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(updatedCalculList);
     return;
   }
 
