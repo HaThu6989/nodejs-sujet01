@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Ajoutez un utilisateur</title>
+    <link href="/style" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="container">
+        <ul>
+            <li><a class="active" >Home</a></li>
+            <li><a href="/memory">memory</a></li>
+        </ul>
+        <form action="/calculatrice" method="POST">
+            <div class="form-group">
+                <label>Number 1
+                    <input class="form-control" name="number1" type="text" />
+                </label>
+                <label>Number 2
+                    <input class="form-control" name="number2" type="text" />
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="radio" id="add" name="operator" value="add" checked>
+                <label for="add">Addition</label>
+                <input type="radio" id="mult" name="operator" value="mult">
+                <label for="mult">Multiplication</label>
+            </div>
+            <p>Total : </p>
+            <button type="submit" class="btn btn-primary">Ajouter</button>
+            <button type="submit" class="btn btn-primary"><a href="/reset">reset</a></button>
+        </form>
+    </div>
+</body>
+
+</html>
