@@ -71,10 +71,32 @@ function htmlCode(listStudents) {
   return html;
 }
 
+// Function to generate HTML code for the calculator memory
+function generateMemoryHTML(memory) {
+  let memoryHTMLCode = '';
+
+  // Generate HTML for each memory item
+  memory.forEach((item, index) => {
+    memoryHTMLCode += `
+      <li>
+        <span>Number 1: ${item.number1}</span>
+        <span>Number 2: ${item.number2}</span>
+        <span>Operator: ${item.operator}</span>
+        <span>Total: ${item.total}</span>
+        <button onclick="deleteMemory(${index})">Delete</button>
+      </li>
+    `;
+  });
+
+  return memoryHTMLCode;
+}
+
+
 // Export functions
 module.exports = {
   readStudentData,
   writeStudentData,
   deleteStudent,
-  htmlCode
+  htmlCode,
+  generateMemoryHTML
 };

@@ -6,10 +6,13 @@ const querystring = require('querystring');
 
 // Custom functions
 const utils = require('./core/utils');
-const { readStudentData, writeStudentData, deleteStudent, htmlCode } = utils
+const { readStudentData, writeStudentData, deleteStudent, htmlCode, generateMemoryHTML } = utils
 
 // Environment variables
 const { APP_LOCALHOST, APP_PORT } = process.env;
+
+// Calculator memory variable
+let calculatorMemory = [];
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
@@ -88,14 +91,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve the calculatrice.html page
-  if (url === "calculatrice" && req.method === "GET") {
-    const calculatrice = fs.readFileSync(`./view/calculatrice.html`);
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(calculatrice);
-    return;
-  }
-
   // Delete a student
   if (url === "delete" && req.method === "POST") {
     let body = '';
@@ -120,6 +115,85 @@ const server = http.createServer((req, res) => {
       return;
     });
 
+    return;
+  }
+  
+  // Calculator form submission
+  if (url === "calculatrice" && req.method === "POST") {
+    let body = '';
+
+    // Collect the request data
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+
+    // Process the request data
+    req.on('end', () => {
+      const data = querystring.parse(body);
+      const number1 = parseFloat(data.number1);
+      const number2 = parseFloat(data.number2);
+      const operator = data.operator;
+
+      let total;
+
+      // Perform the calculation based on the selected operator
+      switch (operator) {
+        case 'add':
+          total = number1 + number2;
+          // console.log(total)
+          break;
+        case 'mult':
+          total = number1 * number2;
+          // console.log(total)
+          break;
+        default:
+          total = 0;
+      }
+
+      // Add the calculation to the calculator memory
+      calculatorMemory.push({
+        number1,
+        number2,
+        operator,
+        total
+      });
+      // Read the calculator.html file
+      const calculatorHTML = fs.readFileSync('./view/calculatrice.html', 'utf8');
+
+      // Replace the <!-- TOTAL --> placeholder with the calculated total
+      const updatedHTML = calculatorHTML.replace('<!-- TOTAL -->', total);
+
+      // Set the response headers
+      res.writeHead(200, { "Content-Type": "text/html" });
+
+      // Send the updated HTML response
+      res.end(updatedHTML);
+    });
+
+    return;
+  }
+
+  // Serve the calculator.html page
+  if (url === "calculatrice" && req.method === "GET") {
+    const calculator = fs.readFileSync(`./view/calculatrice.html`);
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(calculator);
+    return;
+  }
+
+  // Serve the memory.html page
+  if (url === "memory" && req.method === "GET") {
+    // Read the memory.html file
+    const memoryHTML = fs.readFileSync('./view/memory.html', 'utf8');
+
+    // Generate the HTML code for the calculator memory
+    const memoryHTMLCode = generateMemoryHTML(calculatorMemory);
+
+    // Replace the <!-- MEMORY_LIST --> placeholder with the generated memory HTML
+    const updatedHTML = memoryHTML.replace('<!-- MEMORY_LIST -->', memoryHTMLCode);
+
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(updatedHTML);
     return;
   }
 
