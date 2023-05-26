@@ -2,11 +2,14 @@ const http = require("http");
 const fs = require("fs");
 require("dotenv").config();
 
+const utils = require("./core/utils.js");
+const { readStudentData, writeStudentData } = utils;
+
 const { APP_LOCALHOST, APP_PORT } = process.env;
 
 const server = http.createServer((req, res) => {
   const url = req.url.replace("/", "");
-  console.log("url", url);
+  // console.log("url", url);
 
   if (url === "style") {
     const css = fs.readFileSync(`./assets/css/style.css`);
@@ -31,15 +34,16 @@ const server = http.createServer((req, res) => {
   }
 
   if (url === "users" && req.method === "POST") {
-    let body = '';
+    let body = "";
 
     // Collect the request data
-    req.on('data', (chunk) => {
+    req.on("data", (chunk) => {
+      // console.log("chunk.toString", chunk.toString);
       body += chunk.toString();
     });
 
     // Process the request data
-    req.on('end', () => {
+    req.on("end", () => {
       // Parse the request body
       const { name, date } = JSON.parse(body);
 
@@ -53,8 +57,8 @@ const server = http.createServer((req, res) => {
       writeStudentData(students);
 
       // Send a success response
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('Student added successfully!');
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("Student added successfully!");
     });
     // const users = fs.readFileSync(`./view/users.html`);
 
