@@ -31,15 +31,40 @@ const server = http.createServer((req, res) => {
   }
 
   if (url === "users" && req.method === "POST") {
-    const users = fs.readFileSync(`./view/users.html`);
+    let body = '';
 
-    const dataUsers = fs.readFileSync(`./Data/students.json`, "utf8");
-    const data = JSON.parse(dataUsers).students;
-    console.log("data", data); //tableau
+    // Collect the request data
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
 
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(users);
-    return;
+    // Process the request data
+    req.on('end', () => {
+      // Parse the request body
+      const { name, date } = JSON.parse(body);
+
+      // Read the current student data
+      const students = readStudentData();
+
+      // Add the new student to the array
+      students.push({ name, date });
+
+      // Write the updated student data to the JSON file
+      writeStudentData(students);
+
+      // Send a success response
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('Student added successfully!');
+    });
+    // const users = fs.readFileSync(`./view/users.html`);
+
+    // const dataUsers = fs.readFileSync(`./Data/students.json`, "utf8");
+    // const data = JSON.parse(dataUsers).students;
+    // console.log("data", data); //tableau
+
+    // res.writeHead(200, { "Content-Type": "text/html" });
+    // res.end(users);
+    // return;
   }
 
   if (url === "calculatrice" && req.method === "GET") {
