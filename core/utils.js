@@ -1,25 +1,17 @@
 const fs = require("fs");
-// function readStudentData() {
-//   try {
-//     const data = fs.readFileSync(`./Data/students.json`, "utf8");
-//     return JSON.parse(data);
-//   } catch (error) {
-//     console.error('Error reading student data:', error);
-//     return [];
-//   }
-// }
 
+// Function to read the students data from the JSON file
 function readStudentData() {
     try {
       const data = fs.readFileSync(`./Data/students.json`, 'utf-8');
       const students = JSON.parse(data);
+      // make sure that the data read from the JSON file is an array. 
       return Array.isArray(students) ? students : [];
     } catch (error) {
       console.error('Error reading student data:', error);
       return [];
     }
-  }
-
+}
 
 // Function to write the student data to the JSON file
 function writeStudentData(students) {
@@ -42,6 +34,7 @@ function htmlCode(listStudents){
     return html
 }
 
+// export functions
 module.exports = {
     readStudentData,
     writeStudentData,
