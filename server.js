@@ -1,6 +1,11 @@
 const http = require("http");
 const fs = require("fs");
 require("dotenv").config();
+const querystring = require('querystring');
+
+const utils = require('./core/utils');
+
+const {readStudentData, writeStudentData, htmlCode}= utils
 
 const { APP_LOCALHOST, APP_PORT } = process.env;
 
@@ -23,48 +28,56 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (url === "users" && req.method === "GET") {
-    const users = fs.readFileSync(`./view/users.html`);
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(users);
-    return;
-  }
-
   if (url === "users" && req.method === "POST") {
     let body = '';
-
+  
     // Collect the request data
     req.on('data', (chunk) => {
       body += chunk.toString();
     });
-
+  
     // Process the request data
     req.on('end', () => {
-      // Parse the request body
-      const { name, date } = JSON.parse(body);
-
+      const data = querystring.parse(body);
+      const name = data.name;
+      const date = data.date;
+  
       // Read the current student data
       const students = readStudentData();
-
+  
       // Add the new student to the array
       students.push({ name, date });
-
+  
       // Write the updated student data to the JSON file
       writeStudentData(students);
+  
+      // Read the updated student data
+      const updatedStudents = readStudentData();
+  
+      // Read the users.html file
+      const usersHTML = fs.readFileSync('./view/users.html', 'utf8');
 
-      // Send a success response
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('Student added successfully!');
+      // Replace the <!-- STUDENT_LIST --> placeholder with the generated HTML
+      const updatedHTML = usersHTML.replace('<!-- STUDENT_LIST -->', htmlCode(updatedStudents));
+  
+      // Set the response headers
+      res.writeHead(200, { "Content-Type": "text/html" });
+  
+      // Send the updated HTML response
+      res.end(updatedHTML);
     });
-    // const users = fs.readFileSync(`./view/users.html`);
-
-    // const dataUsers = fs.readFileSync(`./Data/students.json`, "utf8");
-    // const data = JSON.parse(dataUsers).students;
-    // console.log("data", data); //tableau
-
-    // res.writeHead(200, { "Content-Type": "text/html" });
-    // res.end(users);
-    // return;
+  
+    return;
+  }
+  if (url === "users" && req.method === "GET") {
+    const usersFilePath = './view/users.html';
+    let usersHtml = fs.readFileSync(usersFilePath, 'utf8');
+    const students = readStudentData();
+    usersHtml = usersHtml.replace('<!-- STUDENT_LIST -->', htmlCode(students))
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(usersHtml);
+  
+    return;
   }
 
   if (url === "calculatrice" && req.method === "GET") {
